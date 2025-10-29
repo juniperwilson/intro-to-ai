@@ -1,7 +1,6 @@
 from focus import EstadoFocus, JogoFocus
 from typing import Callable
-from collections import namedtuple
-from jogos import Game
+import copy
 
 infinity = float('inf')
 
@@ -20,10 +19,11 @@ def func_basicus(estado,jogador) :
     return my_pilhas - opp_pilhas
 
 
-
+# funcao usada como funcao de avaliacao num algoritmo alphabeta com cutoff
+# retorna o valor avaliado deste estado
 # Objetivo eh escrever uma funcao que maximiza a pontuacao no torneio
                                         # funcao que recebe JogoFocus, EstadoFocus retorna tuple descrito abaixo
-def func_28(estado: EstadoFocus, jogador: Callable[[JogoFocus, EstadoFocus], tuple]):
+def func_28(estado: EstadoFocus, jogador: Callable[[JogoFocus, EstadoFocus], tuple]) -> int:
     """
     Estado do jogo Focus:
     - 'board': dicionário {(x,y): [peças, de baixo para cima]}
@@ -37,3 +37,4 @@ def func_28(estado: EstadoFocus, jogador: Callable[[JogoFocus, EstadoFocus], tup
     ou 
     - ('reserve', (x,y))   -- tira da reserva de pecas e coloca na posicao (x,y)
     """
+    return 0
