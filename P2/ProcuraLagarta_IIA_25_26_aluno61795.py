@@ -193,17 +193,7 @@ class MundoLagarta(Problem):
         return distancia_lagarta_maca
 
 
-
-
-
-
-
-
-
-
-
-
-
+    # Function that calculates a weighted Manhattan distance
     def h_dist_costs(self, node):
         clone=copy.deepcopy(node.state)
         ## Satisfaz objectivo?
@@ -217,44 +207,37 @@ class MundoLagarta(Problem):
         return hCost + yCost
 
 
-
-
-
-def get_highest_novelty(boundary: list[tuple[Node, float]]):
+# Function that ranks the nodes by highest novelty and lowest position
+def rank_nodes(boundary: list[tuple[Node, float]]):
+    if (len(boundary) == 0):
+        return []
     nodes, novelties = zip(*boundary)
     positions = [(-node.state['head'][0], -node.state['head'][1]) for node in nodes]
-    return boundary[novelties.index(max(zip(novelties, positions))[0])]
+    ranking = list(zip(nodes, novelties, positions))
+    ranking.sort(reverse = True, key = lambda tup: (tup[1], tup[2]))
+    resultNodes, resultNovelties, _ = zip(*ranking)
+    return list(zip(resultNodes, resultNovelties))
 
 
-
-
+# Function that calculates the novelties of each node in a list of nodes
 def calc_novelties(nodes: list) -> list[tuple[Node, float]]:
-    if (len(nodes) <= 1):
+    if (len(nodes) == 1):
         return list(zip(nodes, [0.0]))
-    distances = [[0]] * len(nodes)
+    distances = [[0.0]] * len(nodes)
     novelties = []
     for i in range(len(nodes)):
         this = nodes[i]
-        others = [node for node in nodes if node != this]
+        others = [nodes[j] for j in range(len(nodes)) if i != j]
         distances[i] = [manhattan(this.state['head'], other.state['head']) for other in others]
     novelties = list(map(lambda ls: sum(ls) / len(ls), distances))
     return list(zip(nodes, novelties))
-    
 
 
-
-def join_lists(n, first=[], second=[])->list[Node]:
-    if (len(first) + len(second) <= n):
-        first.extend(second)
-        return first
-    offset = len(first) - len(second) % n
-    first.extend(second)
-    result = first
-    result[len(result) - n:]
-    result[n - offset:].extend(result[:n - offset])
-    return result
-
-
+# Function that updates the boundary of a problem to have N or less nodes, keeping the best nodes
+def updateBoundary(n, boundary, bNodes) -> list[tuple[Node, float]]:
+    boundary = calc_novelties(bNodes)
+    ranking = rank_nodes(boundary)
+    return ranking[:n]
 
 
 def graph_search_count_novelty(problem, N: int, frontier: list):
@@ -271,20 +254,25 @@ def graph_search_count_novelty(problem, N: int, frontier: list):
     expandidos=0
     frontier.append(Node(problem.initial))
     boundary = list(zip(frontier, [0.0]))
-    explored = set()
-    while True:
-        if (len(boundary) == 0):
-            break
-        node, novelty = get_highest_novelty(boundary)
+    explored = []
+    while frontier:
+        rankedNodes = rank_nodes(boundary)
+        # print(rankedNodes[0])
+        node, novelty = rankedNodes[0]
         expandidos += 1
         if problem.goal_test(node.state):
             return (node, expandidos)
-        explored.add(node.state)
+        
+        explored.append(node.state)
         boundaryNodes, _ = zip(*boundary)
         boundaryNodes = list(boundaryNodes)
         extension = [child for child in node.expand(problem) if child.state not in explored and child not in boundaryNodes]
+
         boundary.remove((node, novelty))
         boundaryNodes.remove(node)
-        nodes = join_lists(N, boundaryNodes, extension)
-        boundary = calc_novelties(nodes)
+
+        boundaryNodes.extend(extension)
+        boundary = updateBoundary(N, boundary, boundaryNodes)
+        frontier = boundaryNodes
+
     return (None,expandidos)
