@@ -1,6 +1,6 @@
 from focus import EstadoFocus, JogoFocus
 from typing import Callable
-from itertools import take
+# from itertools import take
 
 import copy
 import math
@@ -57,7 +57,7 @@ def towers_score(estado: EstadoFocus, jogador: str, opponent: str) -> float:
     for pos in positions:
 
         # ideal dominated tower has top == jogador and every other piece opponents
-        opp_pieces = len(list(take(lambda x: x == opponent, pos)))
+        opp_pieces = len(list(filter(lambda x: x == opponent, pos)))
         if estado.top_piece(pos) == jogador:
             plyr_tower_avg += opp_pieces / (len(pos) - 1)
 
